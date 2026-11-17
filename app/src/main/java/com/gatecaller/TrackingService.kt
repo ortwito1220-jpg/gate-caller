@@ -86,6 +86,7 @@ class TrackingService : Service() {
             alert(this, "Already on a call, gate not called ($where)")
         } else {
             telecom.placeCall(Uri.fromParts("tel", gateNumber(this), null), Bundle())
+            prefs(this).edit().putLong("lastCall", System.currentTimeMillis()).apply()
             log(this, "CALL $where")
         }
     }

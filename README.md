@@ -42,10 +42,34 @@ Run these in PowerShell, in a folder **outside** the repo (for example `Document
 Keep `keystore.p12` and the password somewhere safe. If they are lost, a new build can only be installed
 after uninstalling the app. `key.pem` and `cert.pem` can be deleted.
 
+## One-time: token for the Update button
+
+The repo is private, so the app needs a read-only token to see its releases.
+
+1. GitHub → Settings → Developer settings → Fine-grained tokens → **Generate new token**.
+   Repository access: only `gate-caller`. Permissions: **Contents: Read-only**. Pick the longest expiration.
+2. Store it as a secret (it prompts; paste the token):
+
+   ```
+   gh secret set UPDATE_TOKEN -R ortwito1220-jpg/gate-caller
+   ```
+
+3. Start a build so the token is baked into the next APK:
+
+   ```
+   gh workflow run build.yml -R ortwito1220-jpg/gate-caller
+   ```
+
+When the token expires, repeat these steps and install that build by hand once.
+
 ## Get the APK onto the phone
 
-1. GitHub → repo → **Actions** → latest "Build APK" run → download the `gate-caller-apk` artifact (a zip).
-2. Unzip, copy `app-release.apk` to the phone, open it and allow "install unknown apps".
+After the first install, use the **Update app** button in the app; the system asks to confirm the install.
+
+First install (or when the Update button can't work):
+
+1. GitHub → repo → **Releases** → latest → download `app-release.apk` on the phone.
+2. Open it and allow "install unknown apps".
 
 ## Phone setup (OnePlus / OxygenOS)
 

@@ -24,6 +24,7 @@ const val ZONE_RADIUS_M = 1000f     // geofence radius around each gate location
 const val TRACK_TIMEOUT_MIN = 10L   // tracking time after a geofence ENTER
 const val MANUAL_TRACK_MIN = 5L     // tracking time after the tile / button
 const val GATE_SAMPLES = 15         // GPS readings averaged by "Set gate here"
+const val CALL_COOLDOWN_MIN = 10L   // after a call, ignore geofence ENTERs this long (tile/button still work)
 
 // ---- Settings ----
 class Point(val lat: Double, val lng: Double)

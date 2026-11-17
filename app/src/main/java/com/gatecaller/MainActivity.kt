@@ -70,6 +70,17 @@ class MainActivity : Activity() {
             }
             showTracking()
         }
+        val updateStatus = findViewById<TextView>(R.id.updateStatus)
+        updateStatus.text = "Installed: version ${installedVersion(this)}"
+        click(R.id.update) {
+            Thread {
+                try {
+                    checkAndInstallUpdate(this) { s -> runOnUiThread { updateStatus.text = s } }
+                } catch (e: Exception) {
+                    runOnUiThread { updateStatus.text = "Update failed: ${e.message}" }
+                }
+            }.start()
+        }
         click(R.id.permLocation) { requestPermissions(arrayOf(ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION), 0) }
         click(R.id.permBackground) { requestPermissions(arrayOf(ACCESS_BACKGROUND_LOCATION), 0) }
         click(R.id.permPhone) { requestPermissions(arrayOf(CALL_PHONE, READ_PHONE_STATE), 0) }

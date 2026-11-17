@@ -19,7 +19,8 @@ Please:
 2. Geofence ENTER → start a foreground service with high-accuracy GPS every 1 s.
 3. Call when **2 readings in a row** have `distance ≤ TRIGGER_M` (to the nearest gate location) and `accuracy ≤ MAX_ACC_M`.
 4. Stop the service after the call, or after 10 minutes with no call.
-5. Re-arm only after geofence EXIT. That gives one call per arrival, with no cooldown timer.
+5. Re-arm only after geofence EXIT. That gives one call per arrival.
+6. Cooldown: geofence ENTERs within `CALL_COOLDOWN_MIN` (10 min) of the last call are ignored, so overlapping or late ENTERs from nearby gate locations can't call twice. The tile/button ignore the cooldown.
 
 ### Leaving (manual)
 - A Quick Settings tile (and a button in the app) starts the same tracking service for ~5 minutes.
@@ -37,6 +38,7 @@ Please:
 - "Leaving" button: turns green with "Tracking to gate… tap to stop" while the tracking service runs (from any source); tapping it then stops tracking.
 - Trigger distance (default 6 m).
 - Buttons for the OnePlus permissions: battery optimization exemption, location "Allow all the time", phone call permission, notifications.
+- "Update app" button: fetches the latest GitHub Release, and if it is newer than the installed version, downloads the APK and installs it via `PackageInstaller` (the system asks to confirm). Works on a private repo through a read-only token baked in at build time (`UPDATE_TOKEN` secret).
 - Log view.
 
 ### Other
@@ -50,7 +52,7 @@ Please:
 - **No defensive checks for unlikely edge cases.** One decision rule. If something unexpected happens, show a notification instead of writing recovery code. Keep it readable.
 
 ## Build (GitHub Actions)
-- The workflow builds a release APK on push and uploads it as an artifact.
+- The workflow builds a release APK on push and publishes it as GitHub Release `v<run number>` (the run number is also the `versionCode`).
 - Sign it with a **fixed keystore** stored in repo secrets (base64), so updates install over the old version. Walk me through generating the keystore and adding the secrets.
 
 ## Not doing (for now)

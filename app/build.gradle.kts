@@ -13,6 +13,12 @@ android {
         targetSdk = 34
         versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
         versionName = "1.$versionCode"
+        // Read-only GitHub token for the in-app updater (empty if the repo is public).
+        buildConfigField("String", "UPDATE_TOKEN", "\"${System.getenv("UPDATE_TOKEN") ?: ""}\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     // Fixed keystore: the workflow decodes it from repo secrets into keystore.p12.
