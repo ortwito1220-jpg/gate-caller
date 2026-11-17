@@ -21,17 +21,11 @@
             android:importantForAutofill="no"
             android:inputType="phone" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Trigger distance (m)" />
-
-        <EditText
-            android:id="@+id/trigger"
+        <Button
+            android:id="@+id/settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:importantForAutofill="no"
-            android:inputType="numberDecimal" />
+            android:text="Settings (distance, cooldown, timing…)" />
 
         <TextView
             android:layout_width="wrap_content"

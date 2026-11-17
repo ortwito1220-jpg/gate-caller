@@ -16,7 +16,7 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 
-fun startTracking(c: Context, source: String, minutes: Long) {
+fun startTracking(c: Context, source: String, minutes: Float) {
     if (points(c).isEmpty()) return alert(c, "No gate location set")
     TrackingService.running = true
     c.startForegroundService(
@@ -55,7 +55,7 @@ class TrackingService : Service() {
         startForeground(1, notification(this, "Tracking ($source)", false), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
         gps.requestLocationUpdates(gpsRequest(), onFix, Looper.getMainLooper())
         handler.removeCallbacks(timeout)
-        handler.postDelayed(timeout, intent.getLongExtra("minutes", 0) * 60_000)
+        handler.postDelayed(timeout, (intent.getFloatExtra("minutes", 0f) * 60_000).toLong())
         return START_NOT_STICKY
     }
 
@@ -64,7 +64,7 @@ class TrackingService : Service() {
     private fun check(fix: Location) {
         val (gate, dist) = gates.mapIndexed { i, p -> i + 1 to distance(fix, p) }.minBy { it.second }
         closest = minOf(closest, dist)
-        hits = if (dist <= triggerM(this) && fix.accuracy <= MAX_ACC_M) hits + 1 else 0
+        hits = if (dist <= triggerM(this) && fix.accuracy <= maxAccM(this)) hits + 1 else 0
 
         val where = "dist=%.1fm acc=%.1fm gate=%d source=%s".format(dist, fix.accuracy, gate, source)
         getSystemService(NotificationManager::class.java).notify(1, notification(this, where, false))

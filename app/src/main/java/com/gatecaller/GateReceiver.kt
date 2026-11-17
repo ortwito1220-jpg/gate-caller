@@ -21,9 +21,9 @@ class GateReceiver : BroadcastReceiver() {
         // Overlapping zones of nearby gate locations send several ENTERs: track once, call once.
         if (TrackingService.running) return
         val sinceCall = System.currentTimeMillis() - prefs(c).getLong("lastCall", 0)
-        if (sinceCall < CALL_COOLDOWN_MIN * 60_000) return log(c, "ENTER ignored (called ${sinceCall / 60_000} min ago)")
+        if (sinceCall < cooldownMin(c) * 60_000) return log(c, "ENTER ignored (called ${sinceCall / 60_000} min ago)")
         log(c, "ENTER zone")
-        startTracking(c, "geofence", TRACK_TIMEOUT_MIN)
+        startTracking(c, "geofence", trackMin(c))
     }
 
     private fun onInstallResult(c: Context, intent: Intent) {

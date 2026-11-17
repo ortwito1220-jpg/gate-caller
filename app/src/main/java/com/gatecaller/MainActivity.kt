@@ -20,12 +20,14 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
+import android.text.InputType
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
@@ -35,7 +37,6 @@ import com.google.android.gms.location.LocationServices
 @SuppressLint("MissingPermission", "BatteryLife", "SetTextI18n")
 class MainActivity : Activity() {
     private val number by lazy { findViewById<EditText>(R.id.number) }
-    private val trigger by lazy { findViewById<EditText>(R.id.trigger) }
     private val setGate by lazy { findViewById<Button>(R.id.setGate) }
     private val progress by lazy { findViewById<ProgressBar>(R.id.progress) }
     private val track by lazy { findViewById<Button>(R.id.track) }
@@ -56,9 +57,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main)
         number.setText(gateNumber(this))
-        trigger.setText(triggerM(this).toString())
-        progress.max = GATE_SAMPLES
-
+        click(R.id.settings) { showSettings() }
         click(R.id.setGate) { addGateHere() }
         click(R.id.track) {
             if (TrackingService.running) {
@@ -66,7 +65,7 @@ class MainActivity : Activity() {
                 log(this, "STOP button")
             } else {
                 save()
-                startTracking(this, "button", MANUAL_TRACK_MIN)
+                startTracking(this, "button", manualMin(this))
             }
             showTracking()
         }
@@ -116,14 +115,55 @@ class MainActivity : Activity() {
     }
 
     private fun save() {
-        prefs(this).edit()
-            .putString("number", number.text.toString())
-            .putFloat("trigger", trigger.text.toString().toFloatOrNull() ?: TRIGGER_M)
-            .apply()
+        prefs(this).edit().putString("number", number.text.toString()).apply()
     }
 
-    // Average GATE_SAMPLES GPS readings and add them as a point where the car should be when the call fires.
+    // One number field per tunable. Save keeps the old value for any field left empty.
+    private fun showSettings() {
+        val form = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(48, 24, 48, 0)
+        }
+        val fields = TUNABLES.associateWith { t ->
+            form.addView(TextView(this).apply { text = "${t.label}   (default ${plain(t.default)})" })
+            EditText(this).apply {
+                inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+                setText(plain(setting(this@MainActivity, t.key)))
+                form.addView(this)
+            }
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Settings")
+            .setView(ScrollView(this).apply { addView(form) })
+            .setPositiveButton("Save") { _, _ ->
+                val edit = prefs(this).edit()
+                fields.forEach { (t, field) -> field.text.toString().toFloatOrNull()?.let { edit.putFloat(t.key, it) } }
+                edit.apply()
+                settingsChanged()
+            }
+            .setNeutralButton("Defaults") { _, _ ->
+                val edit = prefs(this).edit()
+                TUNABLES.forEach { edit.remove(it.key) }
+                edit.apply()
+                settingsChanged()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun settingsChanged() {
+        registerGeofences(this) // the zone radius may have changed
+        log(this, "SETTINGS " + TUNABLES.joinToString(" ") { "${it.key}=${plain(setting(this, it.key))}" })
+        showLog()
+    }
+
+    private fun plain(f: Float) = if (f % 1 == 0f) f.toInt().toString() else f.toString()
+
+    // Average the configured number of GPS readings and add them as a point where the car should be
+    // when the call fires.
     private fun addGateHere() {
+        val samples = gateSamples(this)
+        progress.max = samples
         val fixes = ArrayList<Location>()
         setGate.isEnabled = false
         setGate.text = "Reading GPS…"
@@ -133,7 +173,7 @@ class MainActivity : Activity() {
             override fun onLocationResult(result: LocationResult) {
                 fixes += result.locations
                 progress.progress = fixes.size
-                if (fixes.size < GATE_SAMPLES) return
+                if (fixes.size < samples) return
                 gps.removeLocationUpdates(this)
                 reading = null
                 savePoints(this@MainActivity, points(this@MainActivity) +

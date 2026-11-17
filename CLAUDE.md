@@ -36,7 +36,7 @@ Please:
 - Gate locations: a list (one phone number for all). Each can be removed (with a confirm dialog).
 - "Set gate here": average ~15 GPS readings and **add** a location. This is the point where the **car** is when the call should fire. Shows a progress bar while reading, then a "Gate set!" dialog.
 - "Leaving" button: turns green with "Tracking to gate… tap to stop" while the tracking service runs (from any source); tapping it then stops tracking.
-- Trigger distance (default 6 m).
+- "Settings" button: a dialog with every tunable (trigger distance, max GPS inaccuracy, zone radius, tracking times, cooldown, GPS readings for "Set gate here"), each showing its default; "Defaults" resets them. Saving re-registers the geofences and logs the new values.
 - Buttons for the OnePlus permissions: battery optimization exemption, location "Allow all the time", phone call permission, notifications.
 - "Update app" button: fetches the latest GitHub Release, and if it is newer than the installed version, downloads the APK and installs it via `PackageInstaller` (the system asks to confirm). The repo is public, so no token is needed; if it is made private, a read-only token baked in at build time (`UPDATE_TOKEN` secret) makes it work.
 - Log view.
@@ -48,7 +48,7 @@ Please:
 ## Code style (important)
 - Kotlin, minimal dependencies (only `play-services-location`). No database, no DI, no architecture layers.
 - About 4–5 files: settings (SharedPreferences), receiver (geofence + boot), tracking service, tile service, main activity.
-- Tunables are constants at the top of one file: `TRIGGER_M`, `MAX_ACC_M`, `ZONE_RADIUS_M`, `TRACK_TIMEOUT_MIN`, `MANUAL_TRACK_MIN`.
+- Tunable defaults are constants at the top of `Settings.kt` (`TRIGGER_M`, `MAX_ACC_M`, `ZONE_RADIUS_M`, `TRACK_TIMEOUT_MIN`, `MANUAL_TRACK_MIN`, `CALL_COOLDOWN_MIN`, `GATE_SAMPLES`), listed in `TUNABLES` for the Settings dialog; code reads the current values through `triggerM(c)` etc.
 - **No defensive checks for unlikely edge cases.** One decision rule. If something unexpected happens, show a notification instead of writing recovery code. Keep it readable.
 
 ## Build (GitHub Actions)
