@@ -15,9 +15,9 @@ Please:
 ## Behavior
 
 ### Arriving (automatic)
-1. Idle: one geofence (~1 km radius) around the gate. It has to be this wide because background geofence events can arrive a couple of minutes late.
+1. Idle: one geofence (~1 km radius) around each gate location. While tracking, further ENTERs are ignored. It has to be this wide because background geofence events can arrive a couple of minutes late.
 2. Geofence ENTER → start a foreground service with high-accuracy GPS every 1 s.
-3. Call when **2 readings in a row** have `distance ≤ TRIGGER_M` and `accuracy ≤ MAX_ACC_M`.
+3. Call when **2 readings in a row** have `distance ≤ TRIGGER_M` (to the nearest gate location) and `accuracy ≤ MAX_ACC_M`.
 4. Stop the service after the call, or after 10 minutes with no call.
 5. Re-arm only after geofence EXIT. That gives one call per arrival, with no cooldown timer.
 
@@ -32,7 +32,9 @@ Please:
 
 ### Setup screen (one screen)
 - Gate phone number.
-- "Set gate here": average ~15 GPS readings. This sets the point where the **car** is when the call should fire.
+- Gate locations: a list (one phone number for all). Each can be removed (with a confirm dialog).
+- "Set gate here": average ~15 GPS readings and **add** a location. This is the point where the **car** is when the call should fire. Shows a progress bar while reading, then a "Gate set!" dialog.
+- "Leaving" button: turns green with "Tracking to gate… tap to stop" while the tracking service runs (from any source); tapping it then stops tracking.
 - Trigger distance (default 6 m).
 - Buttons for the OnePlus permissions: battery optimization exemption, location "Allow all the time", phone call permission, notifications.
 - Log view.
@@ -52,4 +54,4 @@ Please:
 - Sign it with a **fixed keystore** stored in repo secrets (base64), so updates install over the old version. Walk me through generating the keystore and adding the secrets.
 
 ## Not doing (for now)
-- Multiple gates, schedules, pattern learning, Bluetooth beacon, approach direction, mock-location protection.
+- Different phone numbers per gate location, schedules, pattern learning, Bluetooth beacon, approach direction, mock-location protection.

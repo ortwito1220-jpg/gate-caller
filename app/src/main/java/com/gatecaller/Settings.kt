@@ -20,40 +20,63 @@ import java.util.Locale
 // ---- Tunables ----
 const val TRIGGER_M = 6f            // default trigger distance; editable in the app
 const val MAX_ACC_M = 10f           // ignore GPS readings less accurate than this
-const val ZONE_RADIUS_M = 1000f     // geofence radius around the gate
+const val ZONE_RADIUS_M = 1000f     // geofence radius around each gate location
 const val TRACK_TIMEOUT_MIN = 10L   // tracking time after a geofence ENTER
 const val MANUAL_TRACK_MIN = 5L     // tracking time after the tile / button
 const val GATE_SAMPLES = 15         // GPS readings averaged by "Set gate here"
 
 // ---- Settings ----
+class Point(val lat: Double, val lng: Double)
+
 fun prefs(c: Context) = c.getSharedPreferences("gate", Context.MODE_PRIVATE)
 fun gateNumber(c: Context) = prefs(c).getString("number", "")!!
 fun triggerM(c: Context) = prefs(c).getFloat("trigger", TRIGGER_M)
-fun gateLat(c: Context) = prefs(c).getString("lat", "0")!!.toDouble()
-fun gateLng(c: Context) = prefs(c).getString("lng", "0")!!.toDouble()
-fun saveGate(c: Context, lat: Double, lng: Double) =
-    prefs(c).edit().putString("lat", lat.toString()).putString("lng", lng.toString()).apply()
+
+// Gate locations, stored as "lat,lng;lat,lng". Falls back to the single "lat"/"lng" of version 1.
+fun points(c: Context): List<Point> {
+    val p = prefs(c)
+    val raw = p.getString("points", null)
+        ?: if (p.contains("lat")) "${p.getString("lat", "")},${p.getString("lng", "")}" else ""
+    return raw.split(";").filter { it.isNotEmpty() }.map {
+        val (lat, lng) = it.split(",")
+        Point(lat.toDouble(), lng.toDouble())
+    }
+}
+
+fun savePoints(c: Context, list: List<Point>) {
+    prefs(c).edit()
+        .putString("points", list.joinToString(";") { "${it.lat},${it.lng}" })
+        .remove("lat").remove("lng")
+        .apply()
+    registerGeofences(c)
+}
 
 // ---- GPS: high accuracy, every 1 s ----
 fun gpsRequest() = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).build()
 
-// ---- Geofence: ENTER only. A new ENTER can only come after an exit, so it is one call per arrival. ----
+// ---- Geofences: one per gate location, ENTER only. A new ENTER can only come after an exit,
+// so it is one call per arrival. ----
 @SuppressLint("MissingPermission")
-fun registerGeofence(c: Context) {
-    if (!prefs(c).contains("lat")) return
-    val fence = Geofence.Builder()
-        .setRequestId("gate")
-        .setCircularRegion(gateLat(c), gateLng(c), ZONE_RADIUS_M)
-        .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
-        .setExpirationDuration(Geofence.NEVER_EXPIRE)
-        .build()
-    val request = GeofencingRequest.Builder().setInitialTrigger(0).addGeofence(fence).build()
+fun registerGeofences(c: Context) {
+    val client = LocationServices.getGeofencingClient(c)
     val intent = PendingIntent.getBroadcast(
         c, 0, Intent(c, GateReceiver::class.java),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
     )
-    LocationServices.getGeofencingClient(c).addGeofences(request, intent)
-        .addOnFailureListener { alert(c, "Geofence not registered: ${it.message}") }
+    val fences = points(c).mapIndexed { i, p ->
+        Geofence.Builder()
+            .setRequestId("gate$i")
+            .setCircularRegion(p.lat, p.lng, ZONE_RADIUS_M)
+            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+            .setExpirationDuration(Geofence.NEVER_EXPIRE)
+            .build()
+    }
+    client.removeGeofences(intent).addOnCompleteListener {
+        if (fences.isEmpty()) return@addOnCompleteListener
+        val request = GeofencingRequest.Builder().setInitialTrigger(0).addGeofences(fences).build()
+        client.addGeofences(request, intent)
+            .addOnFailureListener { alert(c, "Geofence not registered: ${it.message}") }
+    }
 }
 
 // ---- Log (plain text file, shown in the app) ----

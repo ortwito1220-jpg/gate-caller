@@ -10,8 +10,10 @@ import com.google.android.gms.location.GeofencingEvent
 class GateReceiver : BroadcastReceiver() {
     override fun onReceive(c: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            registerGeofence(c)
+            registerGeofences(c)
         } else if (GeofencingEvent.fromIntent(intent)?.geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+            // Overlapping zones of nearby gate locations send several ENTERs: track once.
+            if (TrackingService.running) return
             log(c, "ENTER zone")
             startTracking(c, "geofence", TRACK_TIMEOUT_MIN)
         }

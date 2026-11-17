@@ -54,7 +54,9 @@ In the app:
 1. Enter the gate phone number.
 2. Tap the five permission buttons in order until each shows ✓.
    For "Allow all the time", choose it on the settings page that opens.
-3. Drive to the spot where the car should be when the call fires, tap **Set gate here**, wait for 15 readings.
+3. Drive to the spot where the car should be when the call fires, tap **Set gate here** and wait for the
+   progress bar to fill (15 readings) and the "Gate set!" popup. Repeat at other spots to add more gate
+   locations (for example, approaching from a different street); the call fires near any of them.
 
 In OxygenOS settings (so the system does not kill the app):
 
@@ -67,4 +69,4 @@ For leaving: add the **Gate** tile to Quick Settings (edit the tiles, drag "Gate
 ## Tuning
 
 The log at the bottom of the app shows `ENTER zone`, `CALL dist=… acc=… source=…` and
-`TIMEOUT closest=…` lines. While tracking, the notification shows the live distance and accuracy.
+`TIMEOUT closest=…` lines; `gate=N` is the number of the nearest gate location. While tracking, the notification shows the live distance and accuracy.
