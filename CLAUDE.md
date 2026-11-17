@@ -38,7 +38,7 @@ Please:
 - "Leaving" button: turns green with "Tracking to gate… tap to stop" while the tracking service runs (from any source); tapping it then stops tracking.
 - Trigger distance (default 6 m).
 - Buttons for the OnePlus permissions: battery optimization exemption, location "Allow all the time", phone call permission, notifications.
-- "Update app" button: fetches the latest GitHub Release, and if it is newer than the installed version, downloads the APK and installs it via `PackageInstaller` (the system asks to confirm). Works on a private repo through a read-only token baked in at build time (`UPDATE_TOKEN` secret).
+- "Update app" button: fetches the latest GitHub Release, and if it is newer than the installed version, downloads the APK and installs it via `PackageInstaller` (the system asks to confirm). The repo is public, so no token is needed; if it is made private, a read-only token baked in at build time (`UPDATE_TOKEN` secret) makes it work.
 - Log view.
 
 ### Other

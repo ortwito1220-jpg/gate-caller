@@ -42,9 +42,10 @@ Run these in PowerShell, in a folder **outside** the repo (for example `Document
 Keep `keystore.p12` and the password somewhere safe. If they are lost, a new build can only be installed
 after uninstalling the app. `key.pem` and `cert.pem` can be deleted.
 
-## One-time: token for the Update button
+## Only if the repo is made private again: token for the Update button
 
-The repo is private, so the app needs a read-only token to see its releases.
+The repo is public, so the Update button needs no token. If it is ever made private, the app needs a
+read-only token to see its releases:
 
 1. GitHub → Settings → Developer settings → Fine-grained tokens → **Generate new token**.
    Repository access: only `gate-caller`. Permissions: **Contents: Read-only**. Pick the longest expiration.
